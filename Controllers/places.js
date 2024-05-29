@@ -1,33 +1,46 @@
+//INDEX ROUTE
 const router = require('express').Router()
 const db = require('../models')
-const places = require('../models/places')
-
-// New Route
-router.get('/new', (req, res) => {
-  res.render('places/new')
-  })
 
 router.get('/', (req, res) => {
     db.Place.find()
     .then((places) => {
-      res.render('places/index', {places})
+      res.render('places/index', { places })
     })
     .catch(err => {
+      console.log(err) 
       res.render('error404')
     })
 })
 
+//New place Route
 router.post('/', (req, res) => {
   db.Place.create(req.body)
   .then(() => {
       res.redirect('/places')
   })
   .catch(err => {
-      console.log('err', err)
-      res.render('error404')
+    if (err && err.name == 'ValidationError') {
+      let message = 'Validation Error: '
+      for (var field in err.errors) {
+          message += `${field} was ${err.errors[field].value}. `
+          message += `${err.errors[field].message}`
+      }
+      console.log('Validation error message', message)
+      res.render('places/new', { message })
+    }
+    else {
+        res.render('error404')
+    }
   })
 })
 
+ //get places NEW **form
+router.get('/new', (req, res) => {
+  res.render('places/new')
+})
+
+//SHOW Route
 router.get('/:id', (req, res) => {
   db.Place.findById(req.params.id)
   .then(place => {
@@ -39,9 +52,7 @@ router.get('/:id', (req, res) => {
   })
 })
 
-router.get('/:id', (req, res) => {
-  res.send('GET /places/:id stub')
-})
+
 
 router.put('/:id', (req, res) => {
   res.send('PUT /places/:id stub')
@@ -64,4 +75,3 @@ router.delete('/:id/rant/:rantId', (req, res) => {
 })
 
 module.exports = router
-
